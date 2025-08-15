@@ -3,5 +3,5 @@ from .import views
 
 
 urlpatterns =[
-    path("notes",views.notes,name="notes")
+    path("notes/",views.notes,name="notes")
 ]
