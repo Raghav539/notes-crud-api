@@ -2,9 +2,11 @@ from django.shortcuts import render
 from noteapp.models import Note
 from noteapp.serializers import NoteSerializer
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 
 # Create your views here.
 
@@ -25,6 +27,10 @@ def notes(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required for creating notes."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        
         serializer = NoteSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -45,15 +51,22 @@ def note_detail(request, slug):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required for updating notes."}, status=status.HTTP_401_UNAUTHORIZED)
+
         serializer = NoteSerializer(note, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     elif request.method == 'DELETE':
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required for deleting notes."}, status=status.HTTP_401_UNAUTHORIZED)
+        
         note.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     
         
