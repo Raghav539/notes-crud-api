@@ -62,6 +62,7 @@ REST_FRAMEWORK = {
 }
 
 ROOT_URLCONF = 'my_notes.urls'
+AUTH_USER_MODEL = "users.CustomUser"
 
 TEMPLATES = [
     {
@@ -77,6 +78,8 @@ TEMPLATES = [
         },
     },
 ]
+
+
 
 WSGI_APPLICATION = 'my_notes.wsgi.application'
 
