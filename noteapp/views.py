@@ -7,7 +7,6 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-
 # 🔍 Search Notes
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Anyone can search
@@ -28,6 +27,7 @@ def search_notes(request):
 
 # 📌 List and Create Notes
 @api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])  # ✅ Only authenticated can create
 def notes(request):
     if request.method == "GET":
         notes = Note.objects.all()
@@ -35,12 +35,9 @@ def notes(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == "POST":
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication required for creating notes."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        serializer = NoteSerializer(data=request.data)
+        serializer = NoteSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save(user=request.user)  # Attach note to user
+            serializer.save()  # `owner` is handled inside serializer
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,9 +55,9 @@ def note_detail(request, slug):
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication required for updating notes."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        serializer = NoteSerializer(note, data=request.data, partial=True)  # ✅ allow partial update
+        serializer = NoteSerializer(note, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(owner=request.user)  # ✅ ensure owner doesn’t break
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
